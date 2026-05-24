@@ -1,4 +1,4 @@
-# Nexus Tasks
+# BrainWorks — Nexus Tasks
 
 A modern, full-featured todo app built with React and Vite. Data is stored locally in your browser (IndexedDB) — no backend required to run.
 
