@@ -1,8 +1,10 @@
 import * as Icons from '@mui/icons-material';
 import {
+  CalendarMonth,
   Dashboard,
   DeleteOutline,
   Star,
+  Timer,
   Today,
   ViewList,
   WbSunny,
@@ -33,6 +35,8 @@ const NAV_ITEMS = [
   { view: VIEWS.upcoming, label: 'Upcoming', icon: WbSunny },
   { view: VIEWS.starred, label: 'Starred', icon: Star },
   { view: VIEWS.all, label: 'All Tasks', icon: ViewList },
+  { view: VIEWS.calendar, label: 'Calendar', icon: CalendarMonth },
+  { view: VIEWS.pomodoro, label: 'Pomodoro', icon: Timer },
 ];
 
 const DRAWER_WIDTH = 280;

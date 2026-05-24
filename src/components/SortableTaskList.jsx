@@ -43,11 +43,7 @@ export function SortableTaskList({
   };
 
   const handleToggle = item => {
-    if (isGlobal) {
-      void toggleTask(item.id, item.checked);
-    } else {
-      void listActions.toggleChecked(item.id);
-    }
+    void toggleTask(item);
   };
 
   const handleDelete = id => {

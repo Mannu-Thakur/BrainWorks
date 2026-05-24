@@ -15,6 +15,8 @@ export function AppState({ children }) {
   const [tagFilter, setTagFilter] = useState('');
   const [detailItemId, setDetailItemId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [focusMode, setFocusMode] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
   const openList = useCallback(listId => {
     setCurrentList(listId);
@@ -52,6 +54,10 @@ export function AppState({ children }) {
       setDetailItemId,
       sidebarOpen,
       setSidebarOpen,
+      focusMode,
+      setFocusMode,
+      commandPaletteOpen,
+      setCommandPaletteOpen,
     }),
     [
       currentList,
@@ -65,6 +71,8 @@ export function AppState({ children }) {
       tagFilter,
       detailItemId,
       sidebarOpen,
+      focusMode,
+      commandPaletteOpen,
     ]
   );
 

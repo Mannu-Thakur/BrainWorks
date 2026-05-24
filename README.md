@@ -1,46 +1,63 @@
 # BrainWorks — Nexus Tasks
 
-A modern, full-featured todo app built with React and Vite. Data is stored locally in your browser (IndexedDB) — no backend required to run.
+A **portfolio-grade** productivity app: modern UI, smart notifications, Pomodoro, calendar, streaks, and offline-first storage — built with React + Vite.
+
+## Highlights for recruiters
+
+- **Notification system** — in-app center + browser push, reminders, daily digest
+- **Productivity tools** — Pomodoro timer, focus mode, command palette (Ctrl+K)
+- **Rich task model** — priorities, due dates, tags, subtasks, recurring tasks
+- **Analytics** — completion rate, 7-day chart, daily streaks
+- **PWA** — installable, works offline (service worker via vite-plugin-pwa)
+- **No backend required** — IndexedDB (Dexie); optional `VITE_API_URL` for future API
 
 ## Features
 
-- Multiple lists with custom icons and colors
-- Priorities, due dates, tags, stars, notes, and subtasks
-- Dashboard, Today, Upcoming, Starred, and All Tasks views
-- Search, filters, and sorting
-- Drag-and-drop reordering
-- Dark / light theme
-- Export and import JSON backups
+| Area | Details |
+|------|---------|
+| Tasks | Lists, drag-and-drop, filters, search, stars, notes, subtasks |
+| Notifications | Per-task reminders, due-today alerts, daily digest, sound |
+| Views | Dashboard, Today, Upcoming, Starred, All, Calendar, Pomodoro |
+| UX | Dark/light theme, keyboard shortcuts, focus mode, toasts |
+| Data | Export/import JSON, local-first privacy |
 
 ## Quick start
 
 ```bash
 npm install
-cp .env.example .env   # optional; defaults work
+cp .env.example .env
 npm run dev
 ```
 
-Open the URL shown in the terminal (usually `http://localhost:5173`).
+Allow **browser notifications** when prompted (Settings → Request browser permission).
+
+## Keyboard shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+K` | Command palette |
+| `Ctrl+1` | Dashboard |
+| `Ctrl+2` | Today |
+| `Ctrl+3` | Pomodoro |
+| `Ctrl+F` | Focus mode |
+| `Ctrl+/` | All tasks |
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Production build to `dist/` |
-| `npm run preview` | Preview production build |
-| `npm run lint` | Run ESLint |
+```bash
+npm run dev      # development
+npm run build    # production build
+npm run preview  # preview build
+npm run lint     # ESLint
+```
 
 ## Environment
 
-Copy `.env.example` to `.env` for local overrides. Only variables prefixed with `VITE_` are exposed to the client.
+See `.env.example`. Only `VITE_*` variables are exposed to the client.
 
 ## Tech stack
 
-- React 18 + Vite
-- Material UI
-- Dexie (IndexedDB)
-- SWR
+React 18 · Vite · Material UI · Dexie · SWR · date-fns · @dnd-kit · vite-plugin-pwa
 
 ## License
 

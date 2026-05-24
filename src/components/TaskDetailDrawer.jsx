@@ -13,13 +13,14 @@ import {
   Typography,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useAllTasks } from '../hooks/useAllTasks.js';
 import { useTaskActions } from '../hooks/useTaskActions.js';
 import { useTodoList } from '../hooks/useTodoList.js';
 import { useAppState } from '../providers/AppState.jsx';
-import { PRIORITIES, VIEWS } from '../utils.js';
+import { PRIORITIES, RECURRENCE, VIEWS } from '../utils.js';
 
 export function TaskDetailDrawer() {
   const { detailItemId, setDetailItemId, view, currentList } = useAppState();
@@ -39,6 +40,8 @@ export function TaskDetailDrawer() {
   const [notes, setNotes] = useState('');
   const [priority, setPriority] = useState(0);
   const [dueDate, setDueDate] = useState(null);
+  const [reminderAt, setReminderAt] = useState(null);
+  const [recurrence, setRecurrence] = useState('none');
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
   const [subtaskText, setSubtaskText] = useState('');
@@ -50,6 +53,8 @@ export function TaskDetailDrawer() {
       setNotes(item.notes ?? '');
       setPriority(item.priority ?? 0);
       setDueDate(item.dueDate ? new Date(item.dueDate) : null);
+      setReminderAt(item.reminderAt ? new Date(item.reminderAt) : null);
+      setRecurrence(item.recurrence ?? 'none');
       setTags(item.tags ?? []);
       setSubtasks(item.subtasks ?? []);
     }
@@ -149,6 +154,32 @@ export function TaskDetailDrawer() {
               }}
               slotProps={{ textField: { fullWidth: true, size: 'small', sx: { mb: 2 } } }}
             />
+            <DateTimePicker
+              label="Reminder"
+              value={reminderAt}
+              onChange={d => {
+                setReminderAt(d);
+                save({ reminderAt: d ? d.toISOString() : null });
+              }}
+              slotProps={{ textField: { fullWidth: true, size: 'small', sx: { mb: 2 } } }}
+            />
+            <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+              <InputLabel>Repeat</InputLabel>
+              <Select
+                label="Repeat"
+                value={recurrence}
+                onChange={e => {
+                  setRecurrence(e.target.value);
+                  save({ recurrence: e.target.value });
+                }}
+              >
+                {Object.entries(RECURRENCE).map(([key, val]) => (
+                  <MenuItem key={key} value={val}>
+                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <Typography variant="subtitle2" gutterBottom>
               Tags
             </Typography>

@@ -1,6 +1,7 @@
 import {
   CheckCircle,
   ListAlt,
+  LocalFireDepartment,
   Schedule,
   Star,
   TrendingUp,
@@ -16,6 +17,7 @@ import {
 import { format, isBefore, parseISO, startOfDay } from 'date-fns';
 
 import { useAllTasks } from '../hooks/useAllTasks.js';
+import { useSettings } from '../hooks/useSettings.js';
 import {
   getStarredTasks,
   getTodayTasks,
@@ -23,6 +25,7 @@ import {
 } from '../hooks/useTaskFilters.js';
 import { useTodoLists } from '../hooks/useTodoLists.js';
 import { useAppState } from '../providers/AppState.jsx';
+import { getWeeklyCompletionCounts } from '../services/streakService.js';
 import { VIEWS } from '../utils.js';
 
 function StatCard({ icon: Icon, label, value, color, onClick }) {
@@ -64,7 +67,11 @@ function StatCard({ icon: Icon, label, value, color, onClick }) {
 export function Dashboard() {
   const { data: allTasks } = useAllTasks();
   const { data: lists } = useTodoLists();
+  const { data: settings } = useSettings();
   const { openView } = useAppState();
+  const streak = settings.streakData ?? { current: 0, best: 0 };
+  const weekly = getWeeklyCompletionCounts(allTasks);
+  const maxWeekly = Math.max(...weekly.map(d => d.count), 1);
 
   const active = allTasks.filter(t => !t.checked);
   const completed = allTasks.filter(t => t.checked);
@@ -203,6 +210,54 @@ export function Dashboard() {
         </Grid>
 
         <Grid item xs={12} md={4}>
+          <Card sx={{ mb: 2 }}>
+            <CardContent>
+              <Typography variant="h6" fontWeight={700} gutterBottom>
+                <LocalFireDepartment sx={{ color: '#f59e0b', verticalAlign: 'middle', mr: 0.5 }} />
+                Streak
+              </Typography>
+              <Typography variant="h3" fontWeight={800} color="primary">
+                {streak.current}
+                <Typography component="span" variant="body1" color="text.secondary">
+                  {' '}
+                  days
+                </Typography>
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Best streak: {streak.best} days — complete tasks daily to grow it
+              </Typography>
+            </CardContent>
+          </Card>
+          <Card sx={{ mb: 2 }}>
+            <CardContent>
+              <Typography variant="h6" fontWeight={700} gutterBottom>
+                7-day activity
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, height: 80 }}>
+                {weekly.map(day => (
+                  <Box key={day.key} sx={{ flex: 1, textAlign: 'center' }}>
+                    <Box
+                      sx={{
+                        height: `${(day.count / maxWeekly) * 60 + 4}px`,
+                        minHeight: 4,
+                        bgcolor: 'primary.main',
+                        borderRadius: 1,
+                        mx: 'auto',
+                        maxWidth: 28,
+                        opacity: 0.85,
+                      }}
+                    />
+                    <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
+                      {day.label}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {day.count}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </CardContent>
+          </Card>
           <Card>
             <CardContent>
               <Typography variant="h6" fontWeight={700} gutterBottom>

@@ -5,6 +5,7 @@ import {
   Menu as MenuIcon,
   Search,
   Settings,
+  Terminal,
 } from '@mui/icons-material';
 import {
   AppBar,
@@ -20,6 +21,7 @@ import { usePopupState } from 'material-ui-popup-state/hooks';
 import { useSettings } from '../hooks/useSettings.js';
 import { useAppState } from '../providers/AppState.jsx';
 import { NewListDialog } from './NewListDialog.jsx';
+import { NotificationCenter } from './NotificationCenter.jsx';
 import { SettingsDialog } from './SettingsDialog.jsx';
 
 export function AppHeader() {
@@ -28,7 +30,8 @@ export function AppHeader() {
     variant: 'dialog',
     popupId: 'settings',
   });
-  const { search, setSearch, sidebarOpen, setSidebarOpen } = useAppState();
+  const { search, setSearch, sidebarOpen, setSidebarOpen, setCommandPaletteOpen } =
+    useAppState();
   const { data, setSetting } = useSettings();
   const isDark = (data.themeMode ?? 'dark') === 'dark';
 
@@ -84,6 +87,15 @@ export function AppHeader() {
             }}
           />
           <Box sx={{ flexGrow: 1, display: { xs: 'block', sm: 'none' } }} />
+          <IconButton
+            color="inherit"
+            title="Command palette (Ctrl+K)"
+            onClick={() => setCommandPaletteOpen(true)}
+            sx={{ display: { xs: 'none', md: 'inline-flex' } }}
+          >
+            <Terminal fontSize="small" />
+          </IconButton>
+          <NotificationCenter />
           <IconButton
             color="inherit"
             aria-label="toggle theme"

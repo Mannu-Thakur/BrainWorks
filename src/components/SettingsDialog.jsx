@@ -1,20 +1,29 @@
-import { Download, Upload } from '@mui/icons-material';
+import { Download, Notifications, Upload } from '@mui/icons-material';
 import {
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Select,
+  Switch,
   Typography,
 } from '@mui/material';
 import { useRef } from 'react';
 import { useSWRConfig } from 'swr';
 
+import { useSettings } from '../hooks/useSettings.js';
+import { requestNotificationPermission } from '../services/notificationService.js';
 import { APIs, exportData, putter } from '../utils.js';
 
 export function SettingsDialog({ dialogState }) {
   const fileRef = useRef(null);
   const { mutate } = useSWRConfig();
+  const { data: settings, setSetting } = useSettings();
 
   const handleExport = async () => {
     const data = await exportData();
@@ -44,13 +53,81 @@ export function SettingsDialog({ dialogState }) {
     event.target.value = '';
   };
 
+  const enableBrowser = async () => {
+    const p = await requestNotificationPermission();
+    if (p === 'granted') {
+      await setSetting('browserNotifications', true);
+    }
+  };
+
   return (
     <Dialog open={dialogState.isOpen} onClose={dialogState.close} maxWidth="sm" fullWidth>
       <DialogTitle>Settings</DialogTitle>
       <DialogContent>
+        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1, display: 'flex', gap: 1 }}>
+          <Notifications fontSize="small" /> Notifications
+        </Typography>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.notificationsEnabled !== false}
+              onChange={e => setSetting('notificationsEnabled', e.target.checked)}
+            />
+          }
+          label="In-app notifications"
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.browserNotifications !== false}
+              onChange={e => setSetting('browserNotifications', e.target.checked)}
+            />
+          }
+          label="Browser push notifications"
+        />
+        <Button size="small" onClick={enableBrowser} sx={{ mb: 1, display: 'block' }}>
+          Request browser permission
+        </Button>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.soundEnabled !== false}
+              onChange={e => setSetting('soundEnabled', e.target.checked)}
+            />
+          }
+          label="Sound on reminders"
+        />
+        <FormControl fullWidth size="small" sx={{ mt: 1, mb: 2 }}>
+          <InputLabel>Daily digest hour</InputLabel>
+          <Select
+            label="Daily digest hour"
+            value={settings.dailyDigestHour ?? 9}
+            onChange={e => setSetting('dailyDigestHour', Number(e.target.value))}
+          >
+            {[6, 7, 8, 9, 10, 12, 18].map(h => (
+              <MenuItem key={h} value={h}>
+                {h}:00
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <FormControl fullWidth size="small" sx={{ mb: 3 }}>
+          <InputLabel>Pomodoro length (minutes)</InputLabel>
+          <Select
+            label="Pomodoro length (minutes)"
+            value={settings.pomodoroMinutes ?? 25}
+            onChange={e => setSetting('pomodoroMinutes', Number(e.target.value))}
+          >
+            {[15, 20, 25, 30, 45, 50].map(m => (
+              <MenuItem key={m} value={m}>
+                {m} min
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
         <Typography variant="body2" color="text.secondary" paragraph>
-          Your data is stored locally in this browser. Export regularly to keep a
-          backup.
+          Data is stored locally in this browser. Export regularly to keep a backup.
         </Typography>
         <Button
           fullWidth
@@ -76,9 +153,6 @@ export function SettingsDialog({ dialogState }) {
         >
           Import backup
         </Button>
-        <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 2 }}>
-          Import replaces all current lists and tasks.
-        </Typography>
       </DialogContent>
       <DialogActions>
         <Button onClick={dialogState.close}>Close</Button>

@@ -1,10 +1,12 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
+  Alarm,
   CalendarMonth,
   ChevronRight,
   DeleteOutline,
   DragIndicator,
+  Repeat,
   Star,
   StarBorder,
 } from '@mui/icons-material';
@@ -161,6 +163,12 @@ export function TaskItem({
               color={overdue ? 'error' : 'default'}
               variant={overdue ? 'filled' : 'outlined'}
             />
+          )}
+          {item.reminderAt && (
+            <Chip size="small" icon={<Alarm sx={{ fontSize: 14 }} />} label="Reminder" variant="outlined" />
+          )}
+          {item.recurrence && item.recurrence !== 'none' && (
+            <Chip size="small" icon={<Repeat sx={{ fontSize: 14 }} />} label={item.recurrence} variant="outlined" />
           )}
           {(item.tags ?? []).map(tag => (
             <Chip key={tag} size="small" label={tag} variant="outlined" />

@@ -17,6 +17,25 @@ export const VIEWS = {
   starred: 'starred',
   all: 'all',
   list: 'list',
+  pomodoro: 'pomodoro',
+  calendar: 'calendar',
+};
+
+export const RECURRENCE = {
+  none: 'none',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+};
+
+export const DEFAULT_SETTINGS = {
+  themeMode: 'dark',
+  notificationsEnabled: true,
+  browserNotifications: true,
+  soundEnabled: true,
+  dailyDigestHour: 9,
+  pomodoroMinutes: 25,
+  streakData: { current: 0, best: 0, lastCompletedDate: null },
 };
 
 export function parseTags(tags) {
@@ -56,6 +75,9 @@ export function normalizeItem(item) {
     subtasks: parseSubtasks(item.subtasks),
     notes: item.notes ?? '',
     sortOrder: item.sortOrder ?? 0,
+    reminderAt: item.reminderAt ?? null,
+    recurrence: item.recurrence ?? RECURRENCE.none,
+    lastNotifiedAt: item.lastNotifiedAt ?? null,
     createdAt: item.createdAt ?? new Date().toISOString(),
     updatedAt: item.updatedAt ?? new Date().toISOString(),
   };
@@ -109,6 +131,25 @@ db.version(3)
     }
   });
 
+db.version(4)
+  .stores({
+    lists: '++id, name, sortOrder',
+    listItems:
+      '++id, listId, name, checked, priority, dueDate, starred, sortOrder, reminderAt',
+    settings: 'key',
+    notifications: '++id, createdAt, read',
+  })
+  .upgrade(async tx => {
+    const items = await tx.table('listItems').toArray();
+    for (const item of items) {
+      await tx.table('listItems').update(item.id, {
+        reminderAt: null,
+        recurrence: RECURRENCE.none,
+        lastNotifiedAt: null,
+      });
+    }
+  });
+
 async function getItemsForList(listId) {
   const items = await db.listItems.where({ listId }).toArray();
   return items
@@ -139,6 +180,9 @@ export const APIs = {
   TodoListReorder: 'todo-list-reorder',
   AllTasks: 'all-tasks',
   Settings: 'settings',
+  Notifications: 'notifications',
+  NotificationsMarkRead: 'notifications-mark-read',
+  NotificationsClear: 'notifications-clear',
   Export: 'export',
   Import: 'import',
   Search: 'search',
@@ -162,8 +206,14 @@ export async function fetcher({ url, ...variables }) {
       return getAllItemsNormalized();
     case APIs.Settings: {
       const rows = await db.settings?.toArray?.();
-      if (!rows?.length) return { themeMode: 'dark' };
-      return Object.fromEntries(rows.map(({ key, value }) => [key, value]));
+      const stored = rows?.length
+        ? Object.fromEntries(rows.map(({ key, value }) => [key, value]))
+        : {};
+      return { ...DEFAULT_SETTINGS, ...stored };
+    }
+    case APIs.Notifications: {
+      const rows = await db.notifications.orderBy('createdAt').reverse().toArray();
+      return rows.slice(0, 50);
     }
     case APIs.Search: {
       const q = (variables.query ?? '').toLowerCase().trim();
@@ -218,6 +268,9 @@ export async function putter({ url, id, ...variables }) {
         tags: serializeTags(variables.tags ?? []),
         subtasks: serializeSubtasks(variables.subtasks ?? []),
         starred: variables.starred ?? false,
+        reminderAt: variables.reminderAt ?? null,
+        recurrence: variables.recurrence ?? RECURRENCE.none,
+        lastNotifiedAt: null,
         sortOrder,
         createdAt: now,
         updatedAt: now,
@@ -245,6 +298,25 @@ export async function putter({ url, id, ...variables }) {
     }
     case APIs.Settings:
       return db.settings.put({ key: variables.key, value: variables.value });
+    case APIs.Notifications:
+      return db.notifications.add({
+        title: variables.title,
+        body: variables.body,
+        type: variables.type ?? 'info',
+        taskId: variables.taskId ?? null,
+        read: false,
+        createdAt: now,
+      });
+    case APIs.NotificationsMarkRead:
+      if (variables.all) {
+        const unread = await db.notifications.filter(n => !n.read).toArray();
+        return Promise.all(
+          unread.map(n => db.notifications.update(n.id, { read: true }))
+        );
+      }
+      return db.notifications.update(id, { read: true });
+    case APIs.NotificationsClear:
+      return db.notifications.clear();
     case APIs.Import: {
       await db.transaction('rw', db.lists, db.listItems, db.settings, async () => {
         await db.lists.clear();
@@ -269,6 +341,9 @@ export async function putter({ url, id, ...variables }) {
               tags: serializeTags(parseTags(item.tags)),
               subtasks: serializeSubtasks(parseSubtasks(item.subtasks)),
               starred: item.starred ?? false,
+              reminderAt: item.reminderAt ?? null,
+              recurrence: item.recurrence ?? RECURRENCE.none,
+              lastNotifiedAt: null,
               sortOrder: item.sortOrder ?? 0,
               createdAt: item.createdAt ?? now,
               updatedAt: item.updatedAt ?? now,
@@ -297,5 +372,19 @@ export async function exportData() {
       }),
     });
   }
-  return { version: 3, exportedAt: new Date().toISOString(), lists: result };
+  return { version: 4, exportedAt: new Date().toISOString(), lists: result };
+}
+
+/** Advance due date for recurring tasks */
+export function nextDueDate(isoDate, recurrence) {
+  if (!isoDate || recurrence === RECURRENCE.none) return null;
+  const d = new Date(isoDate);
+  if (recurrence === RECURRENCE.daily) d.setDate(d.getDate() + 1);
+  else if (recurrence === RECURRENCE.weekly) d.setDate(d.getDate() + 7);
+  else if (recurrence === RECURRENCE.monthly) d.setMonth(d.getMonth() + 1);
+  return d.toISOString();
+}
+
+export function nextReminder(isoDate, recurrence) {
+  return nextDueDate(isoDate, recurrence);
 }
